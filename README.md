@@ -1,10 +1,25 @@
 # Jubo Todo List
 
-This is a simple Restful API using Golang and MongoDB with some packages.
+This is a simple Restful API following Model-View-Controller Architecture (MVC), using Golang and MongoDB with some packages.
 1. go-chi
-2. mongoDB driver
+2. MongoDB driver
 
 ## To run this api:
+1. Download MongoDB and Golang
+2. Run mongod
+3. Clone this project
+```
+git clone https://github.com/pochiehwang-1997/Jubo_Todo_List.git
+```
+4. Get all dependencies
+```
+go get ./...
+```
+5. Run project
+```
+go run main.go
+```
+
 
 
 ## To use this todo list:
