@@ -1,15 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
-
-	"context"
-	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -54,11 +53,6 @@ type (
 func init() {
 	rnd = renderer.New()
 	// Use the SetServerAPIOptions() method to set the Stable API version to 1
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	err := rnd.Template(w, http.StatusOK, []string{"static/home.tpl"}, nil)
-	checkErr(err)
 }
 
 func fetchTodo(w http.ResponseWriter, r *http.Request) {
@@ -283,6 +277,11 @@ func todoHandlers() http.Handler {
 		r.Delete("/{id}", deleteTodo)
 	})
 	return rg
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	err := rnd.Template(w, http.StatusOK, []string{"static/home.tpl"}, nil)
+	checkErr(err)
 }
 
 func checkErr(err error) {
