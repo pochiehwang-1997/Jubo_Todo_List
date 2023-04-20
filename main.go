@@ -45,26 +45,27 @@ func main() {
 	if err := client.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Decode(&result); err != nil {
 		panic(err)
 	}
+	fmt.Println("Successfully connected to MongoDB!")
 
-	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
-
+	// Initialize collection
 	db := client.Database(dbName)
-	controllers.TodoCollections(db)
+	controllers.InitTodoCollections(db)
 
+	// Setup server
 	setupServer()
 
 }
 
 func setupServer() {
 	// Setup Server
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Get("/", controllers.RenderHome)
-	r.Mount("/todos", routes.TodoHandlers())
+	routeHandler := chi.NewRouter()
+	routeHandler.Use(middleware.Logger)
+	routeHandler.Get("/", controllers.RenderHome)
+	routeHandler.Mount("/todos", routes.TodoHandlers())
 
 	srv := &http.Server{
 		Addr:         "localhost:" + port,
-		Handler:      r,
+		Handler:      routeHandler,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
