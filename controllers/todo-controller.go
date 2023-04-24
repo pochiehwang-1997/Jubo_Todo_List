@@ -2,10 +2,8 @@ package controllers
 
 import (
 	"Jubo_Todo_List/models"
-	"Jubo_Todo_List/utilities"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,8 +27,7 @@ func InitTodoCollections(db *mongo.Database) {
 // Render home page
 func RenderHome(w http.ResponseWriter, r *http.Request) {
 	render = renderer.New()
-	err := render.Template(w, http.StatusOK, []string{"views/home.html"}, nil)
-	utilities.CheckErr(err)
+	render.JSON(w, http.StatusOK, renderer.M{"message": "Hi!"})
 }
 
 // Get one specific todo
@@ -40,7 +37,7 @@ func FetchTodo(w http.ResponseWriter, r *http.Request) {
 	// Get id from URL params and change to mongo object id form
 	id, err := primitive.ObjectIDFromHex(strings.TrimSpace(chi.URLParam(r, "id")))
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Invalid ID",
 			"error":   err,
 		})
@@ -52,8 +49,8 @@ func FetchTodo(w http.ResponseWriter, r *http.Request) {
 	filter := bson.D{{Key: "_id", Value: id}}
 	err = collection.FindOne(context.TODO(), filter).Decode(&todoInstance)
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
-			"message": "Failed to fetch todos",
+		render.JSON(w, http.StatusBadRequest, renderer.M{
+			"message": "Failed to fetch todo",
 			"error":   err,
 		})
 		return
@@ -80,14 +77,14 @@ func FetchAllTodos(w http.ResponseWriter, r *http.Request) {
 	todoInstances := []models.TodoModel{}
 	cursor, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Failed to fetch todos",
 			"error":   err,
 		})
 		return
 	}
 	if err = cursor.All(context.TODO(), &todoInstances); err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Failed to fetch todos",
 			"error":   err,
 		})
@@ -117,7 +114,7 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 	// Decode input from json type
 	var input models.Todo
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		render.JSON(w, http.StatusProcessing, err)
+		render.JSON(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -138,7 +135,11 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 	}
 	insertResult, err := collection.InsertOne(context.TODO(), todoInstance)
 	if err != nil {
-		log.Fatal(err)
+		render.JSON(w, http.StatusBadRequest, renderer.M{
+			"message": "Failed to create todo",
+			"error":   err,
+		})
+		return
 	}
 
 	// Return success msg
@@ -155,7 +156,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	// Get id from url params and change it to mongo object id type
 	id, err := primitive.ObjectIDFromHex(strings.TrimSpace(chi.URLParam(r, "id")))
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Invalid ID",
 			"error":   err,
 		})
@@ -165,7 +166,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	// Decode input from json type
 	var input models.Todo
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		render.JSON(w, http.StatusProcessing, err)
+		render.JSON(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -182,7 +183,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "title", Value: input.Title}, {Key: "completed", Value: input.Completed}, {Key: "description", Value: input.Description}}}}
 	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Failed to update todo",
 			"error":   err,
 		})
@@ -202,7 +203,7 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	// Get id from url params and change it to mongo object id type
 	id, err := primitive.ObjectIDFromHex(strings.TrimSpace(chi.URLParam(r, "id")))
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Invalid ID",
 			"error":   err,
 		})
@@ -213,7 +214,7 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	filter := bson.D{{Key: "_id", Value: id}}
 	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
-		render.JSON(w, http.StatusProcessing, renderer.M{
+		render.JSON(w, http.StatusBadRequest, renderer.M{
 			"message": "Failed to delete todo",
 			"error":   err,
 		})
