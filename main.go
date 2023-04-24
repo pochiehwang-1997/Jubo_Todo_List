@@ -16,20 +16,24 @@ import (
 
 	"Jubo_Todo_List/controllers"
 	"Jubo_Todo_List/routes"
+	"Jubo_Todo_List/utilities"
 )
 
 const (
-	uri            string = "mongodb://localhost:27017"
 	dbName         string = "todo_list"
 	collectionName string = "todos"
-	port           string = "9000"
+	port           string = "8080"
 )
 
 func main() {
 
 	// Connect to MongoDB
+	config, err := utilities.LoadConfig("./")
+	if err != nil {
+		log.Fatal("Cannot load Config:", err)
+	}
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(config.MONGO_URI).SetServerAPIOptions(serverAPI)
 	// Create a new client and connect to the server
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
@@ -64,7 +68,7 @@ func setupServer() {
 	routeHandler.Mount("/todos", routes.TodoHandlers())
 
 	srv := &http.Server{
-		Addr:         "localhost:" + port,
+		Addr:         ":" + port,
 		Handler:      routeHandler,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,
@@ -75,4 +79,5 @@ func setupServer() {
 	if err := srv.ListenAndServe(); err != nil {
 		log.Printf("listen:%s\n", err)
 	}
+	log.Println("Server down")
 }
